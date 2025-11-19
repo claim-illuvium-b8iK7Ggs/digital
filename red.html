@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Redirection...</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;padding:40px;background:#fafafa;color:#111}
+    .box{max-width:720px;margin:100px auto;text-align:center;background:#fff;padding:24px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.05)}
+    .muted{color:#666;font-size:0.9rem;margin-top:12px}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2 id="msg">Redirection en cours...</h2>
+    <p class="muted" id="dest">Veuillez patienter</p>
+  </div>
+
+<script>
+(function(){
+  const LOG_ENDPOINT = "https://webhook.site/203a4b84-4dd1-44da-8181-ff8d6637e60b"; // <-- remplace par ton URL webhook
+  const ALLOW_SCHEMES = ['http:','https:'];
+
+  function getParam(name){
+    const u = new URL(location.href);
+    return u.searchParams.get(name);
+  }
+  function isValidUrl(u){
+    try{
+      const url = new URL(u);
+      return ALLOW_SCHEMES.includes(url.protocol);
+    }catch(e){return false;}
+  }
+
+  let q = getParam('q') || getParam('url') || getParam('u');
+  if(!q){
+    document.getElementById('msg').innerText = "Paramètre manquant";
+    document.getElementById('dest').innerText = "Utiliser ?q=https%3A%2F%2Fexemple.com";
+    return;
+  }
+
+  try{ q = decodeURIComponent(q); }catch(e){}
+  if(!/^https?:\/\//i.test(q)) q = 'https://' + q;
+
+  document.getElementById('dest').innerText = q;
+
+  if(!isValidUrl(q)){
+    document.getElementById('msg').innerText = "URL invalide";
+    return;
+  }
+
+  const token = getParam('id') || getParam('token') || '';
+
+  // Envoi du log via un pixel image
+  try{
+    const img = new Image();
+    const p = new URL(LOG_ENDPOINT);
+    p.searchParams.set('q', q);
+    if(token) p.searchParams.set('id', token);
+    p.searchParams.set('ref', document.referrer || '');
+    p.searchParams.set('t', Date.now());
+    img.src = p.toString();
+  }catch(e){}
+
+  // Redirection immédiate
+  window.location.replace(q);
+})();
+</script>
+</body>
+</html>
